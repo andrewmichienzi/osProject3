@@ -106,30 +106,6 @@ class Memory
 	end
 end
 
-#
-#	Main
-#
-$memory = Memory.new($NUMOFPAGES)
-File.open($FILE).each do |line|
-	puts "\n#{line}\n"
-	array = line.split(/ /)
-	if array[2] == nil	#halt
-		$memory.removeMemory(array[0])
-	else
-		pageTable = PageTable.new(array[0], array[1], array[2])
-	end
-	$memory.printMemory()
-	
-end
-
-=begin
-test1 = PageTable.new(0, 1044, 940)
-$memory.printMemory()
-test2 = PageTable.new(1, 536, 256)
-=end
-$memory.printMemory()
-
-
 
 
 
