@@ -1,4 +1,6 @@
 #!/usr/bin/ruby
+require 'rubygems'
+require 'sinatra'
 # encoding: utf-8
 $PAGESIZE = 512
 $NUMOFPAGES = 8
