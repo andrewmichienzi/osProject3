@@ -34,10 +34,11 @@ __END__
 
 @@memoryTable
 h2 Memory Table
-table
-	-$memory.frames.each do |i|
-	tr
-		td.frame = $memory.frames[i]
+-$memory.frames.each do |i|
+	p hey	
+=begin		
+td.frame = $memory.frames[i]
 		td.id = $memory.ids[i]
 		td.segment = $memory.segments[i]
 		td.pageNum = $memory.pageNums[i]
+=end
