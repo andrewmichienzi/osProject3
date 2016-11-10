@@ -1,6 +1,5 @@
-#!/usr/bin/ruby
-require 'rubygems'
-require 'sinatra'
+#!/usr/bin/ruby 
+require 'singleton'
 # encoding: utf-8
 $PAGESIZE = 512
 $NUMOFPAGES = 8
@@ -63,6 +62,7 @@ end
 # 	Memory Class
 #
 class Memory
+include Singleton
 	def initialize(numOfPages)
 		arrayHelp = numOfPages - 1
 		@frames = Array(0..arrayHelp)
@@ -106,19 +106,24 @@ class Memory
 	end
 end
 
+#
+# MAIN
+#
 
-
-
-
-
-
-
-
-
-
-
-
-
+=begin
+$memory = Memory.new($NUMOFPAGES)
+File.open($FILE).each do |line|
+	puts "\n#{line}\n"
+	array = line.split(/ /)
+	if array[2] == nil	#halt
+		$memory.removeMemory(array[0])
+	else
+		pageTable = PageTable.new(array[0], array[1], array[2])
+	end
+	$memory.printMemory()
+	
+end
+=end
 
 
 

@@ -2,12 +2,14 @@ require 'rubygems'
 require 'sinatra'
 require 'slim'
 require_relative 'project3'
+require 'singleton'
 
 #
 #	Main
 #
 get '/' do
-	$memory = Memory.new($NUMOFPAGES)
+	$memory.instance
+	$memory.
 	slim :memoryTable
 end
 =begin
