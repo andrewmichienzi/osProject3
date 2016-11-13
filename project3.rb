@@ -1,5 +1,4 @@
 #!/usr/bin/ruby 
-require 'singleton'
 # encoding: utf-8
 $PAGESIZE = 512
 $NUMOFPAGES = 8
@@ -16,7 +15,6 @@ class PageTable
 		@textSize = textSize
 		@dataSize = dataSize
 		self.createTable()
-		self.addToMemory()
 	end		
 	def createTable()
 		numOfTextPages = (@textSize.to_i/$PAGESIZE.to_f).ceil
@@ -26,9 +24,12 @@ class PageTable
 		
 		@dataTable = Table.new(@id, $DATATYPE, numOfDataPages)
 	end
-	def addToMemory()
-		@textTable.addTableToMemory()
-		@dataTable.addTableToMemory()	
+	def addToMemory(memory)
+		@textTable.addTableToMemory(memory)
+		@dataTable.addTableToMemory(memory)	
+	end
+	def getId()
+		return @id
 	end
 end
 
@@ -47,10 +48,10 @@ class Table
 		@pages = Array(0..@pagesNum)
 		@frames = Array.new(@pagesNum)
 	end
-	def addTableToMemory() 
+	def addTableToMemory(memory) 
 		i = 0
 		while i < @pagesNum do
-			frame = $memory.addPage(@id, @type, i)
+			frame = memory.addPage(@id, @type, i)
 			@frames[i] = frame
 			i += 1
 		end
@@ -62,7 +63,6 @@ end
 # 	Memory Class
 #
 class Memory
-include Singleton
 	def initialize(numOfPages)
 		arrayHelp = numOfPages - 1
 		@frames = Array(0..arrayHelp)
@@ -104,12 +104,135 @@ include Singleton
 		i +=1
 		end
 	end
+	
+	def getNumOfPages()
+		return @numOfPages
+	end
+	
+	def getFrame(i)
+		return @frames[i]
+	end
+	
+	def getId(i)
+		return @ids[i]
+	end
+
+	def getSegment(i)
+		return @segments[i]
+	end
+	
+	def getPage(i)
+		return @pageNums[i]
+	end
+end
+
+# 
+# Container 
+#
+
+class Container
+	def initialize(numOfPages)
+		@memory = Memory.new(numOfPages)
+		@instruction = 0;
+		@instructions = Array.new
+		@pageTables = Array.new
+		@numOfInstructions = 0
+		@name = "Andrew"
+		loadInstructions()
+	end
+
+	def loadInstructions()
+		File.open($FILE).each do |line|
+			@instructions.push line
+			@numOfInstructions += 1
+		end
+	end
+
+	def nextStep()
+		array = @instructions[@instruction].split(/ /)
+		if array[2] == nil
+			@memory.removeMemory(array[0])
+			removePageTable(array[0])
+		else
+			pageTable = PageTable.new(array[0], array[1], array[2])
+			pageTable.addToMemory(@memory)
+			@pageTables.push pageTable
+		end
+		@instruction+=1
+	end
+	
+	def previousStep()
+		@instruction-=1
+		array = @instructions[@instruction].split(/ /)
+		if array[2] == nil 
+			#must find the instruction that put this page into memory so we can re-store it
+			findStoreInstruction(array[0])
+		else
+			@memory.removeMemory(array[0])
+			#removePageTable(array[0])
+		end
+	end
+	
+	def removePageTable(id)
+		@pageTables.delete_if do |pageTable|
+			if pageTable.getId() == id
+				true
+			end
+		end		
+	end
+		
+	def findStoreInstruction(id)
+		i = @instruction 
+		while i > -1 do
+			array = @instructions[i].split(/ /)
+			if array[0] == id and array[2] != nil
+				pageTable = PageTable.new(array[0], array[1], array[2])
+				pageTable.addToMemory(@memory)
+				@pageTables.push pageTable
+				return
+			end
+			i -= 1
+		end
+	end
+
+	def endOfInstructions()
+		if @instruction == @numOfInstructions
+			return true
+		end
+		return false
+	end
+	
+	def printMemory()
+		@memory.printMemory()
+	end
+	
+	def start()
+		while !self.endOfInstructions do
+			
+			print "instruction #{@instruction} > "
+			i = gets.chomp
+			if i == "n"
+				self.nextStep()
+			elsif i == "p"
+				self.previousStep()
+			end
+			self.printMemory()		
+		end
+	end
+	def getName()
+		return @name
+	end
+	def getMemory()
+		return @memory
+	end
 end
 
 #
 # MAIN
 #
 
+#container = Container.new($NUMOFPAGES)
+#container.start()
 =begin
 $memory = Memory.new($NUMOFPAGES)
 File.open($FILE).each do |line|
