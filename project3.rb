@@ -15,21 +15,34 @@ class PageTable
 		@textSize = textSize
 		@dataSize = dataSize
 		self.createTable()
+		@deleted = false;
 	end		
 	def createTable()
 		numOfTextPages = (@textSize.to_i/$PAGESIZE.to_f).ceil
 		numOfDataPages = (@dataSize.to_i/$PAGESIZE.to_f).ceil
 		@numTotalPages = numOfTextPages + numOfDataPages
-		@textTable = Table.new(@id, $TEXTTYPE, numOfTextPages)
-		
-		@dataTable = Table.new(@id, $DATATYPE, numOfDataPages)
+		@textTable = Table.new(@id, $TEXTTYPE, numOfTextPages, @textSize)
+		@dataTable = Table.new(@id, $DATATYPE, numOfDataPages, @dataSize)
 	end
 	def addToMemory(memory)
 		@textTable.addTableToMemory(memory)
 		@dataTable.addTableToMemory(memory)	
 	end
+
 	def getId()
 		return @id
+	end
+
+	def setDelete(value)
+		@deleted = value
+	end
+		
+	def getTextTable()
+		return @textTable
+	end
+
+	def getDataTable()
+		return @dataTable
 	end
 end
 
@@ -37,14 +50,23 @@ end
 #	Table Class
 #
 class Table
-	def initialize(id, type, pagesNum)
+	def initialize(id, type, pagesNum, size)
 		@type = type
 		@pagesNum = pagesNum
 		@id = id
+		@size = size
+		@sizes = Array(@pagesNum)
 		self.createTable()
 	end
 	def createTable()
 		i = 0
+		tempSize = @size.to_i
+		while i < (@pagesNum - 1)
+			@sizes[i] = $PAGESIZE
+			tempSize -= $PAGESIZE
+			i += 1
+		end
+		@sizes[@pagesNum-1] = tempSize
 		@pages = Array(0..@pagesNum)
 		@frames = Array.new(@pagesNum)
 	end
@@ -55,6 +77,18 @@ class Table
 			@frames[i] = frame
 			i += 1
 		end
+	end
+
+	def getSize()
+		return @pagesNum
+	end
+	
+	def getPageSize(i)
+		return @sizes[i]		
+	end
+
+	def getFrame(i)
+		return @frames[i]
 	end
 end
 
@@ -114,14 +148,23 @@ class Memory
 	end
 	
 	def getId(i)
+		if @ids[i] == -1 
+			return " "
+		end
 		return @ids[i]
 	end
 
 	def getSegment(i)
+		if @segments[i] == -1
+			return " "
+		end
 		return @segments[i]
 	end
 	
 	def getPage(i)
+		if @pageNums[i] == -1
+			return " "
+		end
 		return @pageNums[i]
 	end
 end
@@ -138,7 +181,8 @@ class Container
 		@pageTables = Array.new
 		@numOfInstructions = 0
 		@name = "Andrew"
-		loadInstructions()
+		@currentPage = -1
+		self.loadInstructions()
 	end
 
 	def loadInstructions()
@@ -152,6 +196,10 @@ class Container
 		array = @instructions[@instruction].split(/ /)
 		if array[2] == nil
 			@memory.removeMemory(array[0])
+			if array[0] == @currentPage
+				@currentPage = -1
+				puts 'current page reset'
+			end
 			removePageTable(array[0])
 		else
 			pageTable = PageTable.new(array[0], array[1], array[2])
@@ -169,7 +217,7 @@ class Container
 			findStoreInstruction(array[0])
 		else
 			@memory.removeMemory(array[0])
-			#removePageTable(array[0])
+			removePageTable(array[0])
 		end
 	end
 	
@@ -189,7 +237,6 @@ class Container
 				pageTable = PageTable.new(array[0], array[1], array[2])
 				pageTable.addToMemory(@memory)
 				@pageTables.push pageTable
-				return
 			end
 			i -= 1
 		end
@@ -219,11 +266,50 @@ class Container
 			self.printMemory()		
 		end
 	end
+
 	def getName()
 		return @name
 	end
+
 	def getMemory()
 		return @memory
+	end
+
+	def getPageTable(id)
+		i = 0
+		while i < $memory.getNumOfPages()
+			page = @pageTables[i]
+			if page.class == PageTable
+				pageId = page.getId()
+				if pageId.to_i == id.to_i
+					return @pageTables[i]
+				end
+			end
+			i += 1	
+		end
+	end
+	
+	def getCurrentPage()
+		if @currentPage == -1
+			return -1
+		else
+			return self.getPageTable(@currentPage)
+		end
+	end
+	
+	def setCurrentPage(id)
+		@currentPage = id	
+	end
+	def pageExists(id)
+		num = $memory.getNumOfPages().to_i
+		i = 0
+		while i < num
+			if $memory.getId(i).to_i == id.to_i
+				return true
+			end
+			i += 1
+		end
+		return false
 	end
 end
 
@@ -231,9 +317,9 @@ end
 # MAIN
 #
 
-#container = Container.new($NUMOFPAGES)
-#container.start()
 =begin
+container = Container.new($NUMOFPAGES)
+container.start()
 $memory = Memory.new($NUMOFPAGES)
 File.open($FILE).each do |line|
 	puts "\n#{line}\n"
@@ -247,6 +333,5 @@ File.open($FILE).each do |line|
 	
 end
 =end
-
 
 
