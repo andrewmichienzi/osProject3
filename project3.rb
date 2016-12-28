@@ -4,10 +4,12 @@ $PAGESIZE = 512
 $NUMOFPAGES = 8
 $TEXTTYPE = 'Text'
 $DATATYPE = 'Data'
-$FILE = "input3a.data"
+$FILE = "input3c.data"
 
 #
 #	Page Table Class
+#	This class will hold the size of the Process pages and holds two Table
+#	Classes to distinguish between text and data pages
 #
 class PageTable
 	def initialize(id, textSize, dataSize)
@@ -48,6 +50,9 @@ end
 
 #
 #	Table Class
+#	Table class actually holds the information needed in each page. It
+#	holds the page id, the sizes of each frame, the page numbers of where
+#	the pages are in memory, and the type (text or data)
 #
 class Table
 	def initialize(id, type, pagesNum, size)
@@ -95,6 +100,10 @@ end
 
 #
 # 	Memory Class
+# 	This class holds all meta data for where pages are stored, the process
+# 	ids that are associated with each frame, the segment type (text or data)
+# 	and the number of pages in the memory. This is designed to be variable
+# 	if need be.
 #
 class Memory
 	def initialize(numOfPages)
@@ -170,7 +179,20 @@ class Memory
 end
 
 # 
-# Container 
+# 	Container 
+# 	The container holds memory and instructions as well as new page tables
+# 	that are coming in. Some issues that I would have changed if I had
+# 	more time. 
+#
+# 	Previous button is basically just reversing the last instruction. 
+# 	There is a bug though. It will store instructions by the first available
+# 	frame and not by where the frames were originally. If I had more time,
+# 	I would change it by looking at the old process' page table. I could
+# 	Do this in 2 hours
+#
+# 	I'm holding all of the page tables in the array, but I feel like
+# 	the page tables are just thrown into the array. I don't have an
+# 	elegant way of holding them. This was low priority.
 #
 
 class Container
@@ -189,6 +211,14 @@ class Container
 		File.open($FILE).each do |line|
 			@instructions.push line
 			@numOfInstructions += 1
+		end
+	end
+
+	def isFirstInstruction()
+		if @instruction == 0
+			return true
+		else
+			return false
 		end
 	end
 
@@ -310,6 +340,17 @@ class Container
 			i += 1
 		end
 		return false
+	end
+	def getLastInstruction()
+		if @instruction != 0
+			return @instructions[@instruction - 1]
+		else
+			return " "
+		end
+	end
+	
+	def getInstructionNum()
+		return @instruction
 	end
 end
 
